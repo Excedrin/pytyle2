@@ -247,6 +247,7 @@ def update_NET_DESKTOP_GEOMETRY(force=False):
     if old_xinerama != xinerama or force:
         if not force and len(old_xinerama) == len(xinerama):
             for mon in Workspace.iter_all_monitors():
+                mid = mon.id
                 mon.refresh_bounds(
                     xinerama[mid]['x'],
                     xinerama[mid]['y'],
