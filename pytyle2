@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+#==============================================================================
+# PyTyle - An on-demand tiling manager
+# Copyright (C) 2009-2010  Andrew Gallant <andrew@pytyle.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#==============================================================================
+
+import traceback, sys, time
+
+import xcb.xproto
+
+import pt.config as config
+import pt.ptxcb as ptxcb
+import pt.state as state
+from pt.dispatcher import Dispatcher
+
+from pt.window import Window
+from pt.tile import Tile
+
+state.apply_config()
+
+# Apply config may add tiling actions to the queue
+# if tile_on_startup is enabled
+ptxcb.Window.exec_queue()
+Tile.exec_queue()
+
+ptxcb.connection.push()
+
+while True:
+    try:
+        event_data = ptxcb.event.dispatch(
+            ptxcb.connection.conn.wait_for_event()
+        )
+    except xcb.xproto.BadWindow, error:
+        continue
+    except xcb.xproto.BadAccess, error:
+        print error
+        break
+    except xcb.xproto.AccessError, error:
+        print error
+        continue
+
+    if not event_data:
+        continue
+
+    d = Dispatcher(event_data)
+
+    if d.stop():
+        break
+
+ptxcb.connection.disconnect()
