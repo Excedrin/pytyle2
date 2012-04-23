@@ -75,7 +75,9 @@ class AutoTile(Tile):
             if active.container and active.container in self.store.all():
                 return active.container
             elif self.store:
-                return self.store.all()[0]
+                all = self.store.all()
+                if len(all):
+                    return all[0]
 
         return None
 
